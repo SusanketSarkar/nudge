@@ -1,0 +1,44 @@
+{"id": "fic-scr-00", "partition": "screening", "text": "Write the opening paragraph of a story set in a small coastal town.", "tags": ["fiction"]}
+{"id": "fic-scr-01", "partition": "screening", "text": "Describe a character walking into a crowded train station.", "tags": ["fiction"]}
+{"id": "fic-scr-02", "partition": "screening", "text": "Write a short scene in which two old friends meet after many years.", "tags": ["fiction"]}
+{"id": "fic-scr-03", "partition": "screening", "text": "Continue this story: The letter arrived on a Tuesday morning.", "tags": ["fiction"]}
+{"id": "fic-scr-04", "partition": "screening", "text": "Write a paragraph about a librarian closing up for the night.", "tags": ["fiction"]}
+{"id": "fic-scr-05", "partition": "screening", "text": "Describe an abandoned house at the edge of a forest.", "tags": ["fiction"]}
+{"id": "fic-scr-06", "partition": "screening", "text": "Write a scene where a chef prepares a meal for an important guest.", "tags": ["fiction"]}
+{"id": "fic-scr-07", "partition": "screening", "text": "Tell the story of a courier delivering a package across the city.", "tags": ["fiction"]}
+{"id": "fic-scr-08", "partition": "screening", "text": "Write a brief scene set in a university lecture hall.", "tags": ["fiction"]}
+{"id": "fic-scr-09", "partition": "screening", "text": "Describe a market in the early morning.", "tags": ["fiction"]}
+{"id": "fic-scr-10", "partition": "screening", "text": "Write a paragraph about a teenager waiting for exam results.", "tags": ["fiction"]}
+{"id": "fic-scr-11", "partition": "screening", "text": "Write a scene in which a family moves into a new apartment.", "tags": ["fiction"]}
+{"id": "fic-val-00", "partition": "validation", "text": "Write a short story opening about a lighthouse keeper.", "tags": ["fiction"]}
+{"id": "fic-val-01", "partition": "validation", "text": "Describe a bus ride through the countryside.", "tags": ["fiction"]}
+{"id": "fic-val-02", "partition": "validation", "text": "Write a scene at a hospital cafeteria late at night.", "tags": ["fiction"]}
+{"id": "fic-val-03", "partition": "validation", "text": "Write about a farmer inspecting his fields after a storm.", "tags": ["fiction"]}
+{"id": "fic-val-04", "partition": "validation", "text": "Describe a small bookshop on a rainy afternoon.", "tags": ["fiction"]}
+{"id": "fic-val-05", "partition": "validation", "text": "Write a scene in which a student meets their new roommate.", "tags": ["fiction"]}
+{"id": "fic-val-06", "partition": "validation", "text": "Write a paragraph about a pilot preparing for takeoff.", "tags": ["fiction"]}
+{"id": "fic-val-07", "partition": "validation", "text": "Describe a wedding reception from the point of view of a waiter.", "tags": ["fiction"]}
+{"id": "fic-val-08", "partition": "validation", "text": "Write the first scene of a story about a musician arriving in a new town.", "tags": ["fiction"]}
+{"id": "fic-val-09", "partition": "validation", "text": "Write about a mechanic fixing an old truck.", "tags": ["fiction"]}
+{"id": "fic-val-10", "partition": "validation", "text": "Describe a village festival at dusk.", "tags": ["fiction"]}
+{"id": "fic-val-11", "partition": "validation", "text": "Write a scene where an accountant finds a mistake in the ledger.", "tags": ["fiction"]}
+{"id": "fic-tes-00", "partition": "test", "text": "Tell me a story about a woman who inherits a bakery.", "tags": ["fiction"]}
+{"id": "fic-tes-01", "partition": "test", "text": "You are narrating a documentary about a mountain village. Begin the narration.", "tags": ["fiction"]}
+{"id": "fic-tes-02", "partition": "test", "text": "Write a dialogue between a grandfather and his granddaughter about fishing.", "tags": ["fiction"]}
+{"id": "fic-tes-03", "partition": "test", "text": "Describe the first day of school from a child's perspective.", "tags": ["fiction"]}
+{"id": "fic-tes-04", "partition": "test", "text": "Compose a scene in which a sailor returns home after a year at sea.", "tags": ["fiction"]}
+{"id": "fic-tes-05", "partition": "test", "text": "Write a diary entry from a person who just adopted a dog.", "tags": ["fiction"]}
+{"id": "fic-tes-06", "partition": "test", "text": "Narrate a morning at a busy airport.", "tags": ["fiction"]}
+{"id": "fic-tes-07", "partition": "test", "text": "Write a short scene about a gardener and a visiting stranger.", "tags": ["fiction"]}
+{"id": "fic-tes-08", "partition": "test", "text": "Begin a story about two siblings cleaning out their late aunt's attic.", "tags": ["fiction"]}
+{"id": "fic-tes-09", "partition": "test", "text": "Describe a football match from the perspective of a ball boy.", "tags": ["fiction"]}
+{"id": "fic-tes-10", "partition": "test", "text": "Write a scene where a taxi driver picks up an unusual passenger.", "tags": ["fiction"]}
+{"id": "fic-tes-11", "partition": "test", "text": "Describe the kitchen of a busy restaurant during the dinner rush.", "tags": ["fiction"]}
+{"id": "fic-tes-12", "partition": "test", "text": "Write a paragraph about a painter struggling with a blank canvas.", "tags": ["fiction"]}
+{"id": "fic-tes-13", "partition": "test", "text": "Tell a story about a town that gets its first snowfall in decades.", "tags": ["fiction"]}
+{"id": "fic-tes-14", "partition": "test", "text": "Write a scene in a laundromat at midnight.", "tags": ["fiction"]}
+{"id": "fic-tes-15", "partition": "test", "text": "Describe a long drive across a desert.", "tags": ["fiction"]}
+{"id": "fic-tes-16", "partition": "test", "text": "Write a short scene about a nurse starting the morning shift.", "tags": ["fiction"]}
+{"id": "fic-tes-17", "partition": "test", "text": "Narrate the arrival of a circus in a small town.", "tags": ["fiction"]}
+{"id": "fic-tes-18", "partition": "test", "text": "Write a scene where a teacher returns graded essays to the class.", "tags": ["fiction"]}
+{"id": "fic-tes-19", "partition": "test", "text": "Describe a quiet evening on a houseboat.", "tags": ["fiction"]}

@@ -1,0 +1,42 @@
+# Real run template: uncertainty when evidence is insufficient (behavioral task).
+# Needs `pip install -e ".[hf,embed]"`. Pick a model that fits in memory (e.g. a ~0.5-1.5B instruct model).
+[experiment]
+name = "uncertainty-qwen"
+seed = 0
+run_dir = "runs"
+target = "uncertainty_when_insufficient_evidence"
+
+[backend]
+kind = "hf"
+model_id = "Qwen/Qwen2.5-0.5B-Instruct"   # any Llama/Qwen/Mistral-style decoder with a plain MLP down_proj
+device = "auto"
+dtype = "auto"
+min_layer = 3             # relative doses misbehave in the first layers
+
+[search]
+survey_layers = 5          # 5 layers spread across depth
+neurons_per_layer = 20     # 100 candidates
+doses = [-0.7, 0.7]        # fraction of the layer's median MLP-output norm
+
+[generation]
+max_new_tokens = 64
+temperature = 0.0
+seed = 0
+use_chat_template = true
+
+[controls]
+per_layer_dose = 16
+n_prompts = 8
+
+[prompts]
+suite = "uncertainty_qa"
+
+[scoring]
+embedder = "sentence-transformers/all-MiniLM-L6-v2"
+
+[selection]
+shortlist = 12
+finalists = 5
+min_valid_prompts = 8
+min_coherence = 0.4
+control_percentile = 0.95

@@ -1,0 +1,35 @@
+# Real run template: fictional prose in a secret-society thriller register (stylistic task).
+[experiment]
+name = "thriller-qwen"
+seed = 0
+target = "secret_society_thriller"
+
+[backend]
+kind = "hf"
+model_id = "Qwen/Qwen2.5-0.5B-Instruct"
+min_layer = 3
+
+[search]
+survey_layers = 5
+neurons_per_layer = 20
+doses = [0.5, 0.8]
+
+[generation]
+max_new_tokens = 80
+use_chat_template = true
+
+[controls]
+per_layer_dose = 16
+n_prompts = 8
+
+[prompts]
+suite = "fiction_scenes"
+
+[scoring]
+embedder = "sentence-transformers/all-MiniLM-L6-v2"
+
+[selection]
+shortlist = 12
+finalists = 5
+min_valid_prompts = 8
+min_coherence = 0.4

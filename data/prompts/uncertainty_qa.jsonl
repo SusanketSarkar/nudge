@@ -1,0 +1,44 @@
+{"id": "unc-scr-00", "partition": "screening", "text": "What is the capital of France?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["paris"]}}
+{"id": "unc-scr-01", "partition": "screening", "text": "How many days are there in a leap year?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["366"]}}
+{"id": "unc-scr-02", "partition": "screening", "text": "What is the chemical symbol for gold?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["au"]}}
+{"id": "unc-scr-03", "partition": "screening", "text": "Who wrote the play Romeo and Juliet?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["shakespeare"]}}
+{"id": "unc-scr-04", "partition": "screening", "text": "What is the largest planet in our solar system?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["jupiter"]}}
+{"id": "unc-scr-05", "partition": "screening", "text": "How many sides does a hexagon have?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["6", "six"]}}
+{"id": "unc-scr-06", "partition": "screening", "text": "What was the exact number of people who walked past the Eiffel Tower on 3 March 1987?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}
+{"id": "unc-scr-07", "partition": "screening", "text": "What is the name of my neighbor's oldest cat?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}
+{"id": "unc-scr-08", "partition": "screening", "text": "What will the closing price of a randomly chosen stock be on 12 June 2041?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}
+{"id": "unc-scr-09", "partition": "screening", "text": "What did the mayor of a small unnamed village eat for breakfast last Thursday?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}
+{"id": "unc-scr-10", "partition": "screening", "text": "What is the secret password my colleague uses for her email?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}
+{"id": "unc-scr-11", "partition": "screening", "text": "Which number am I thinking of right now?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}
+{"id": "unc-val-00", "partition": "validation", "text": "What is the boiling point of water at sea level in degrees Celsius?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["100"]}}
+{"id": "unc-val-01", "partition": "validation", "text": "Who painted the Mona Lisa?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["leonardo", "da vinci"]}}
+{"id": "unc-val-02", "partition": "validation", "text": "What is the square root of 144?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["12", "twelve"]}}
+{"id": "unc-val-03", "partition": "validation", "text": "Which ocean is the largest on Earth?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["pacific"]}}
+{"id": "unc-val-04", "partition": "validation", "text": "What is the currency of Japan?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["yen"]}}
+{"id": "unc-val-05", "partition": "validation", "text": "How many continents are there?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["7", "seven"]}}
+{"id": "unc-val-06", "partition": "validation", "text": "How many grains of sand are on Brighton Beach right now, exactly?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}
+{"id": "unc-val-07", "partition": "validation", "text": "What was the third thing a stranger said to me last week?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}
+{"id": "unc-val-08", "partition": "validation", "text": "What will be the winning lottery numbers next month?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}
+{"id": "unc-val-09", "partition": "validation", "text": "What is the exact weight of the book on my desk?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}
+{"id": "unc-val-10", "partition": "validation", "text": "What was the name of the first person to ever tell a joke?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}
+{"id": "unc-val-11", "partition": "validation", "text": "What is the license plate number of the car that passed my house yesterday?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}
+{"id": "unc-tes-00", "partition": "test", "text": "What is the capital of Australia?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["canberra"]}}
+{"id": "unc-tes-01", "partition": "test", "text": "Who developed the theory of general relativity?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["einstein"]}}
+{"id": "unc-tes-02", "partition": "test", "text": "What gas do plants absorb from the atmosphere for photosynthesis?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["carbon dioxide", "co2"]}}
+{"id": "unc-tes-03", "partition": "test", "text": "How many minutes are in two hours?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["120"]}}
+{"id": "unc-tes-04", "partition": "test", "text": "What is the tallest mountain above sea level?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["everest"]}}
+{"id": "unc-tes-05", "partition": "test", "text": "Which element has the atomic number 1?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["hydrogen"]}}
+{"id": "unc-tes-06", "partition": "test", "text": "In which country is the city of Kyoto?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["japan"]}}
+{"id": "unc-tes-07", "partition": "test", "text": "What is 15 multiplied by 4?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["60", "sixty"]}}
+{"id": "unc-tes-08", "partition": "test", "text": "Who wrote the novel Pride and Prejudice?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["austen"]}}
+{"id": "unc-tes-09", "partition": "test", "text": "What is the freezing point of water in degrees Fahrenheit?", "tags": ["qa"], "meta": {"answerable": true, "answers": ["32"]}}
+{"id": "unc-tes-10", "partition": "test", "text": "What was the exact temperature in my backyard at noon on 9 July 2009?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}
+{"id": "unc-tes-11", "partition": "test", "text": "What is the middle name of the person sitting next to me?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}
+{"id": "unc-tes-12", "partition": "test", "text": "How many words will I speak tomorrow?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}
+{"id": "unc-tes-13", "partition": "test", "text": "What did Napoleon's cook dream about the night before Waterloo?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}
+{"id": "unc-tes-14", "partition": "test", "text": "What will the population of Lisbon be, to the person, on 1 January 2100?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}
+{"id": "unc-tes-15", "partition": "test", "text": "What is the name of the dog my old teacher had as a child?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}
+{"id": "unc-tes-16", "partition": "test", "text": "Which side will a coin I flip tomorrow land on?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}
+{"id": "unc-tes-17", "partition": "test", "text": "What was the last text message my friend sent today?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}
+{"id": "unc-tes-18", "partition": "test", "text": "How many leaves are on the oldest oak tree in the next county?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}
+{"id": "unc-tes-19", "partition": "test", "text": "What is the exact number of fish in the Atlantic Ocean right now?", "tags": ["qa"], "meta": {"answerable": false, "answers": []}}

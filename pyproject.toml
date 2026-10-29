@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nudge-lab"
+version = "0.1.0"
+description = "An automated lab for discovering, testing and explaining neuron-steering interventions in language models."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+  "numpy>=1.24",
+  "pandas>=2.0",
+  "pydantic>=2.0",
+  "tomli>=2.0; python_version < '3.11'",
+]
+
+[project.optional-dependencies]
+hf = ["torch>=2.1", "transformers>=4.40"]
+embed = ["sentence-transformers>=2.7"]
+ui = ["streamlit>=1.30"]
+dev = ["pytest>=7.4", "ruff>=0.4"]
+all = ["nudge-lab[hf,embed,ui,dev]"]
+
+[project.scripts]
+nudge = "nudge.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+nudge = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning", "ignore::FutureWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

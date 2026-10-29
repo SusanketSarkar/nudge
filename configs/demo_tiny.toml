@@ -1,0 +1,41 @@
+# End-to-end plumbing demo on the random tiny model: runs in about a minute on a laptop CPU.
+# The outputs are gibberish; this verifies the pipeline, it does not find real effects.
+[experiment]
+name = "demo-tiny"
+seed = 0
+run_dir = "runs"
+target = "secret_society_thriller"
+
+[backend]
+kind = "tiny"
+
+[search]
+layers = [2, 3, 4]
+neurons_per_layer = 6
+doses = [-1.0, 1.0]
+
+[generation]
+max_new_tokens = 24
+seed = 0
+
+[controls]
+per_layer_dose = 8
+n_prompts = 8
+
+[prompts]
+suite = "fiction_scenes"
+n_screening = 8
+n_validation = 8
+n_test = 12
+
+[selection]
+shortlist = 4
+finalists = 2
+min_valid_prompts = 4
+min_coherence = 0.0
+control_percentile = 0.5
+require_control = true
+
+[criteria]
+min_prompts = 8
+min_control_percentile = 0.5
