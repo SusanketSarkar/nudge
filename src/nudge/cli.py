@@ -151,6 +151,100 @@ def cmd_run(a) -> int:
     return 0
 
 
+def _fmt_score(x) -> str:
+    return "n/a" if x is None else f"{x:+.3f}"
+
+
+def _print_check_row(label: str, r: dict) -> None:
+    status = "" if r.get("status") == "ok" else f" [status={r.get('status')} {r.get('error') or ''}]"
+    print(f"  {label:<8} J={_fmt_score(r.get('j'))}  target={_fmt_score(r.get('s_target'))}  "
+          f"contrast={_fmt_score(r.get('s_contrast'))}  coh={r.get('coherence', 0):.2f}  "
+          f"rel={_fmt_score(r.get('relevance'))}  flags={','.join(r.get('flags') or []) or '-'}{status}")
+    print(f"           {r.get('text', '').strip() or '(empty)'}")
+
+
+def cmd_check(a) -> int:
+    from nudge.experiments.check import parse_neuron_id, run_check
+    from nudge.experiments.config import config_from_dict, load_config
+    from nudge.experiments.storage import RunStore
+    from nudge.factory import build_backend, load_spec
+    from nudge.models.base import GenerationConfig
+    from nudge.targets.schema import TargetSpec
+
+    if a.run:
+        store = RunStore(a.run)
+        cfg_doc = store.read_json("config.json")
+        if cfg_doc is None or not store.exists("spec.json"):
+            print(f"{a.run} is not a run directory (missing config.json/spec.json)", file=sys.stderr)
+            return 2
+        cfg = config_from_dict(cfg_doc)
+        spec = TargetSpec.load(store.path("spec.json"))
+    else:
+        cfg = load_config(a.config)
+        spec = load_spec(cfg.target)
+
+    if a.neuron_id:
+        try:
+            layer, neuron = parse_neuron_id(a.neuron_id)
+        except ValueError as e:
+            print(e, file=sys.stderr)
+            return 2
+    elif a.layer is not None and a.neuron is not None:
+        layer, neuron = a.layer, a.neuron
+    else:
+        print("give a neuron id (e.g. L12.N4254) or both --layer and --neuron", file=sys.stderr)
+        return 2
+
+    queries = list(a.query)
+    if a.query_file:
+        queries += [ln.strip() for ln in Path(a.query_file).read_text(encoding="utf-8").splitlines() if ln.strip()]
+    if not queries:
+        print("give at least one --query (repeatable) or --query-file", file=sys.stderr)
+        return 2
+
+    doses = a.dose or list(cfg.search.doses)
+    if a.dose_unit:
+        cfg.search.dose_unit = a.dose_unit
+    if a.device:
+        cfg.backend.device = a.device
+    gen = cfg.generation
+    if a.max_new_tokens is not None:
+        gen = GenerationConfig(**{**gen.to_dict(), "max_new_tokens": a.max_new_tokens})
+    n_controls = a.controls if a.controls >= 0 else cfg.controls.per_layer_dose
+
+    try:
+        results = run_check(backend=build_backend(cfg), spec=spec, queries=queries, layer=layer,
+                            neuron=neuron, doses=doses, dose_unit=cfg.search.dose_unit,
+                            generation=gen, embedder_name=cfg.scoring.embedder,
+                            n_controls=n_controls, seed=cfg.seed)
+    except ValueError as e:
+        print(f"check failed: {e}", file=sys.stderr)
+        return 1
+
+    if a.json:
+        print(json.dumps({"model": cfg.backend.model_id, "layer": layer, "neuron": neuron,
+                          "spec": spec.target_name, "results": results}, indent=2))
+        return 0
+
+    print(f"check L{layer}.N{neuron}  model={cfg.backend.model_id or cfg.backend.kind}  "
+          f"spec={spec.target_name}  unit={cfg.search.dose_unit}")
+    for q in results:
+        print(f"\nQUERY: {q['query']}")
+        _print_check_row("baseline", q["baseline"])
+        for r in q["doses"]:
+            _print_check_row(f"dose {r['dose']:+g}", r)
+            if "dj" in r:
+                print(f"           shift deltaJ={r['dj']:+.4f}  d_coherence={r['d_coherence']:+.3f}  "
+                      f"d_relevance={r['d_relevance']:+.3f}")
+            if "controls" in r:
+                c = r["controls"]
+                print(f"           controls K={int(c['n_controls'])}  percentile={c['percentile']:.3f}  "
+                      f"p={c['p_value']:.3f}" if c["n_controls"] else "           controls: none completed")
+    print("\nNote: a positive shift means the output moved toward the target descriptions, not that the "
+          "neuron encodes the concept. Read the text and compare with controls.")
+    return 0
+
+
 def cmd_report(a) -> int:
     from nudge.reports.markdown_report import write_report
 
@@ -211,6 +305,25 @@ def main(argv: list[str] | None = None) -> int:
             s.add_argument("--freeze", action="store_true", help="with --stage validate: freeze proposed finalists")
             s.add_argument("--force-test", action="store_true", help="re-run held-out test (marks it contaminated)")
         s.set_defaults(fn=fn)
+
+    c = sub.add_parser("check", help="manually compare baseline vs steered output for one neuron + dose")
+    c.add_argument("neuron_id", nargs="?", help="e.g. L12.N4254 (or use --layer/--neuron)")
+    c.add_argument("--layer", type=int)
+    c.add_argument("--neuron", type=int)
+    c.add_argument("--dose", type=float, action="append",
+                   help="repeatable; defaults to the config's search.doses")
+    c.add_argument("--dose-unit", help="override the config's dose unit")
+    c.add_argument("--query", action="append", default=[], help="repeatable ad-hoc prompt")
+    c.add_argument("--query-file", help="text file with one query per line")
+    src = c.add_mutually_exclusive_group(required=True)
+    src.add_argument("--run", help="run directory containing config.json + spec.json")
+    src.add_argument("--config", help="experiment TOML; uses its target spec")
+    c.add_argument("--controls", type=int, default=0,
+                   help="matched random-direction controls per (query, dose); -1 = config per_layer_dose")
+    c.add_argument("--max-new-tokens", type=int)
+    c.add_argument("--device", help="override the config's backend.device")
+    c.add_argument("--json", action="store_true", help="machine-readable output")
+    c.set_defaults(fn=cmd_check)
 
     r = sub.add_parser("report", help="export the Markdown report for a run directory")
     r.add_argument("run_dir")

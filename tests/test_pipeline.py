@@ -145,6 +145,33 @@ def test_survey_and_neuron_all_sentinels(tmp_path, backend):
     assert r.estimate()["n_candidates"] == len(r.layers()) * backend.intermediate_size
 
 
+def test_run_check_reports_shift(backend):
+    from nudge.experiments.check import parse_neuron_id, run_check
+    from nudge.models.base import GenerationConfig
+    from nudge.targets.target_builder import get_preset
+
+    assert parse_neuron_id("L12.N4254") == (12, 4254)
+    assert parse_neuron_id("3.7") == (3, 7)
+    out = run_check(backend=backend, spec=get_preset("secret_society_thriller"), queries=["hello"],
+                    layer=2, neuron=1, doses=[1.0], generation=GenerationConfig(max_new_tokens=4),
+                    n_controls=2)
+    row = out[0]["doses"][0]
+    assert out[0]["query"] == "hello" and row["status"] == "ok"
+    assert row["dj"] == pytest.approx(row["j"] - out[0]["baseline"]["j"])
+    assert "controls" in row and row["controls"]["n_controls"] == 2
+
+
+def test_cli_check_prints_shift(small_cfg, backend, capsys):
+    from nudge.cli import main
+
+    r = build_runner(small_cfg, backend=backend)
+    r.screen()
+    rc = main(["check", "L2.N1", "--run", str(small_cfg.run_path), "--dose", "1.0",
+               "--query", "hello", "--controls", "2"])
+    out = capsys.readouterr().out
+    assert rc == 0 and "baseline" in out and "dose +1" in out and "shift deltaJ" in out
+
+
 def test_cli_doctor_and_target(capsys):
     from nudge.cli import main
     assert main(["doctor"]) == 0

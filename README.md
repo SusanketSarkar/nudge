@@ -124,6 +124,19 @@ ones, re-tests them on validation prompts, freezes finalists and success criteri
 `finalists.json` without testing. Because every cell is cached by model + prompt + intervention + decoding config,
 interrupting and re-running continues where it stopped.
 
+**Manual check.** To eyeball a leaderboard row on your own prompt, without launching a new experiment:
+
+```bash
+nudge check L12.N4254 --run runs/zombie-qwen --dose 0.8 --query "what is a dolphin?"
+nudge check L12.N4254 --run runs/zombie-qwen --dose -0.8 --dose 0.8 \
+  --query "what is a dolphin?" --query-file my_queries.txt --controls 16
+```
+
+It prints the baseline and steered answers side by side, the shift (`deltaJ`), target/contrast similarities,
+coherence/relevance deltas, and optionally how the shift compares with matched random-direction controls
+(`--controls N`; `-1` uses the config's `per_layer_dose`). Use `--config configs/zombie_hf.toml` instead of
+`--run` if the run has no saved `spec.json`, and `--json` for machine-readable output.
+
 ### 7. Sweeping every neuron
 
 By default `neurons_per_layer` is a random sample, not all neurons. Use `-1` to inspect **every** neuron in each
