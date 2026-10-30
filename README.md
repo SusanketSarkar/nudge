@@ -94,8 +94,8 @@ model_id = "Qwen/Qwen2.5-0.5B-Instruct"
 min_layer = 3
 
 [search]
-survey_layers = 5        # layers spread across depth (or list explicit `layers = [...]`)
-neurons_per_layer = 20   # random sample per layer; see the sweep note below
+survey_layers = 5        # layers spread across depth (or list explicit `layers = [...]`, or set it to -1 to run for all layers)
+neurons_per_layer = 20   # random sample per layer; you can set this to -1 as well and seep through all neurosn
 doses = [0.5, 0.8]       # strength as a fraction of the layer's median MLP-output norm
 
 [prompts]
@@ -126,11 +126,20 @@ interrupting and re-running continues where it stopped.
 
 ### 7. Sweeping every neuron
 
-`neurons_per_layer` is a random sample, not all neurons. To scan a whole layer, set `layers = [L]` and
-`neurons_per_layer` ≥ that layer's `intermediate_size` (from step 2; sampling caps at the layer size). For a full
-model-wide sweep, list every layer and use one dose and `n_screening = 1–2` first: the candidate count is
-`layers × neurons_per_layer × doses × prompts`, which is hundreds of thousands of generations on a 0.5B model.
-Start with `--stage screen`, read the leaderboard, and only validate/test the top candidates.
+By default `neurons_per_layer` is a random sample, not all neurons. Use `-1` to inspect **every** neuron in each
+selected layer, and `survey_layers = -1` to survey **every** layer (still respecting `backend.min_layer`). You can
+also scan one whole layer with `layers = [L]` + `neurons_per_layer = -1`.
+
+```toml
+[search]
+survey_layers = -1         # all layers across depth (or an explicit `layers = [...]` list)
+neurons_per_layer = -1     # every MLP neuron in each selected layer
+doses = [0.7]              # one dose first; two doubles the cost
+```
+
+A full model-wide sweep is huge: candidate count is `layers × neurons_per_layer × doses × prompts` — hundreds of
+thousands of generations on a 0.5B model. Use one dose and `n_screening = 1–2` first, start with `--stage screen`,
+read the leaderboard, and only validate/test the top candidates.
 
 ### 8. Run the tests
 

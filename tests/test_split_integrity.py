@@ -51,6 +51,12 @@ def test_stats_assisted_sampling_stratifies():
 
 def test_layers_by_depth_and_controls():
     assert layers_by_depth(12, 3, skip_first=2) == [2, 6, 11]
+    assert layers_by_depth(6, -1, skip_first=2) == [2, 3, 4, 5]  # -1 => every layer
     c = make_controls(3, [-0.5, 0.5], "rel_mlp_out_norm", 4, 100, seed=0)
     assert len(c) == 8 and all(x.kind == "random" for x in c)
     assert len({(x.dose, x.random_seed) for x in c}) == 8
+
+
+def test_negative_neuron_count_means_all():
+    assert sample_neurons(2, 20, -1, seed=0) == list(range(20))
+    assert sample_from_statistics(0, list(range(50)), -1, seed=0) == list(range(50))

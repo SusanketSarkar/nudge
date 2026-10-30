@@ -90,7 +90,7 @@ class ExperimentRunner:
             if bad:
                 raise ValueError(f"layers {bad} not supported by backend (available: {avail[0]}..{avail[-1]})")
             return list(s.layers)
-        if s.survey_layers:
+        if s.survey_layers is not None:
             return [l for l in layers_by_depth(len(avail), s.survey_layers, avail[0]) if l in avail]
         return [avail[len(avail) // 2]]
 
@@ -198,7 +198,7 @@ class ExperimentRunner:
             "embedder": self.embedder.name, "prompt_suite": self.suite.name,
             "prompt_fingerprint": self.suite.fingerprint, "prompt_counts": self.suite.counts(),
             "search_budget": {"layers": layers, "neurons_per_layer": self.cfg.search.neurons_per_layer,
-                              "n_candidate_neurons": len(layers) * self.cfg.search.neurons_per_layer,
+                              "n_candidate_neurons": len({(i.layer, i.neuron) for i in self.candidate_list()}),
                               "doses": self.cfg.search.doses, "controls_per_layer_dose": self.cfg.controls.per_layer_dose},
             "environment": {"python": sys.version.split()[0], "platform": platform.platform(),
                             **_versions()},

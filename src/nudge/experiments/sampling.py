@@ -10,15 +10,23 @@ from nudge.utils.hashing import stable_seed
 
 
 def layers_by_depth(n_layers: int, k: int, skip_first: int = 0) -> list[int]:
-    """``k`` layers spread evenly from ``skip_first`` to the last layer (cross-depth survey)."""
+    """``k`` layers spread evenly from ``skip_first`` to the last layer (cross-depth survey).
+
+    ``k <= 0`` surveys every layer, i.e. ``survey_layers = -1`` means all layers.
+    """
     lo, hi = skip_first, n_layers - 1
-    if k >= hi - lo + 1:
+    if k <= 0 or k >= hi - lo + 1:
         return list(range(lo, hi + 1))
     return sorted({int(round(x)) for x in np.linspace(lo, hi, k)})
 
 
 def sample_neurons(layer: int, n_neurons_in_layer: int, k: int, seed: int) -> list[int]:
-    """Uniform sample without replacement; stable per (seed, layer) and independent of other layers."""
+    """Uniform sample without replacement; stable per (seed, layer) and independent of other layers.
+
+    ``k < 0`` inspects every neuron in the layer, i.e. ``neurons_per_layer = -1`` means all neurons.
+    """
+    if k < 0:
+        return list(range(n_neurons_in_layer))
     rng = np.random.default_rng(stable_seed("neurons", seed, layer))
     k = min(k, n_neurons_in_layer)
     return sorted(int(x) for x in rng.choice(n_neurons_in_layer, size=k, replace=False))
@@ -30,6 +38,8 @@ def sample_from_statistics(layer: int, stat: Sequence[float], k: int, seed: int,
     Stratified rather than top-k on purpose: causally useful neurons are not necessarily the loudest.
     """
     stat = np.asarray(stat, dtype=float)
+    if k < 0:
+        return list(range(len(stat)))
     order = np.argsort(stat, kind="stable")
     strata = np.array_split(order, min(bins, len(order)))
     rng = np.random.default_rng(stable_seed("stats", seed, layer))

@@ -28,8 +28,8 @@ class BackendConfig:
 @dataclass
 class SearchConfig:
     layers: list[int] | None = None
-    survey_layers: int | None = None   # alternatively: k layers spread across depth
-    neurons_per_layer: int = 8
+    survey_layers: int | None = None   # k layers spread across depth; -1 (or <=0) = every layer
+    neurons_per_layer: int = 8         # random sample per layer; -1 = every neuron in each layer
     doses: list[float] = field(default_factory=lambda: [-0.7, 0.7])
     dose_unit: str = "rel_mlp_out_norm"
 

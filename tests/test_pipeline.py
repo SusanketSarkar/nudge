@@ -131,6 +131,20 @@ def test_candidate_beating_controls_is_detected(small_cfg, backend):
     assert control_comparison(0.0, ctrl)["percentile"] < 0.8
 
 
+def test_survey_and_neuron_all_sentinels(tmp_path, backend):
+    from nudge.experiments.config import config_from_dict
+
+    cfg = config_from_dict({
+        "experiment": {"name": "all", "seed": 0, "run_dir": str(tmp_path)},
+        "backend": {"kind": "tiny"},
+        "search": {"survey_layers": -1, "neurons_per_layer": -1, "doses": [1.0]},
+        "prompts": {"suite": "fiction_scenes", "n_screening": 1},
+    })
+    r = build_runner(cfg, backend=backend)
+    assert r.layers() == backend.list_supported_layers()
+    assert r.estimate()["n_candidates"] == len(r.layers()) * backend.intermediate_size
+
+
 def test_cli_doctor_and_target(capsys):
     from nudge.cli import main
     assert main(["doctor"]) == 0
