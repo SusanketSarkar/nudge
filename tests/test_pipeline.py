@@ -138,6 +138,35 @@ def test_cli_doctor_and_target(capsys):
     assert "secret_society_thriller" in capsys.readouterr().out
 
 
+def test_cli_target_auto_uses_llm_and_stays_unreviewed(tmp_path, monkeypatch):
+    import nudge.targets.target_builder as tb
+    from nudge.cli import main
+    from nudge.targets.schema import TargetSpec
+
+    seen = {}
+
+    def fake_call(base_url, model, api_key=None, timeout=120.0):
+        seen.update(base_url=base_url, model=model)
+        return lambda prompt: ('{"target_descriptions": ["z1", "z2", "z3"], '
+                               '"contrast_descriptions": ["c1", "c2", "c3"], "task_type": "stylistic"}')
+
+    monkeypatch.setattr(tb, "openai_compatible_call", fake_call)
+    out = tmp_path / "zombie.json"
+    rc = main(["target", "--auto", "--goal", "sound like a zombie", "--model", "fake-model",
+               "--base-url", "http://example/v1", "--out", str(out)])
+    assert rc == 0
+    spec = TargetSpec.load(out)
+    assert spec.origin == "llm_proposed" and not spec.reviewed
+    assert spec.target_descriptions == ["z1", "z2", "z3"]
+    assert seen == {"base_url": "http://example/v1", "model": "fake-model"}
+
+
+def test_cli_target_auto_requires_goal(capsys):
+    from nudge.cli import main
+    assert main(["target", "--auto", "--model", "fake-model", "--out", "unused.json"]) == 2
+    assert "--auto requires --goal" in capsys.readouterr().err
+
+
 def test_ui_pages_render(small_cfg, backend, tmp_path, monkeypatch):
     pytest.importorskip("streamlit")
     from streamlit.testing.v1 import AppTest

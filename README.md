@@ -15,26 +15,129 @@ prompts, and writes an auditable report.
 
 ## Quick start
 
-```bash
-pip install -e ".[hf,ui,dev]"      # add ",embed" for sentence-transformers embeddings
-nudge doctor                       # Phase-0 wiring checks (hook equivalence, cleanup, controls)
-nudge demo                         # full pipeline on the random tiny model (~1 min, CPU)
-nudge ui                           # browse runs, leaderboard, side-by-side outputs, report
-pytest                             # 45 tests
-```
-
-Real model:
+### 1. Install
 
 ```bash
-pip install -e ".[hf,embed,ui]"
-nudge doctor --backend hf --model Qwen/Qwen2.5-0.5B-Instruct   # MUST pass before you trust anything
-nudge plan configs/uncertainty_hf.toml                          # generation count before launching
-nudge run  configs/uncertainty_hf.toml                          # resumable; re-run to continue
-nudge report runs/uncertainty-qwen
+pip install -e ".[hf,embed,ui,dev]"   # torch/transformers, sentence-transformers, streamlit, pytest/ruff
 ```
 
-`nudge run` prints a leaderboard, runs validation, freezes finalists, evaluates the held-out set once, and
-writes `runs/<name>/report.md`. Stages can be run separately: `--stage screen|validate|test`.
+Drop `embed` (`".[hf,ui,dev]"`) if you only need the offline `hashing` embedder and want to skip the
+sentence-transformers download. This only prepares the environment; no experiment runs yet.
+
+### 2. Check the wiring before trusting anything
+
+```bash
+nudge doctor                                                    # tiny random model, no download
+nudge doctor --backend hf --model Qwen/Qwen2.5-3B-Instruct    # the model you actually plan to use
+```
+
+`doctor` verifies that the steering hooks are installed at the right place and removed again: column-vs-row
+orientation, output-hook vs activation-hook equivalence, zero-dose identity, cleanup and repeatability. It also
+prints `n_layers` and `intermediate_size`, which you need later for a full-neuron sweep. **Do not run experiments
+until it says `all checks passed`.**
+
+### 3. Try the pipeline once (optional, ~1 min on a CPU)
+
+```bash
+nudge demo
+```
+
+Runs the whole screen → validate → freeze → test → report pipeline on a randomly initialized tiny model. Outputs
+are gibberish and it finds nothing: the point is to prove the plumbing works before spending GPU time.
+
+### 4. Pick or create a target
+
+A target is a JSON `TargetSpec` (target/contrast descriptions, guardrails). Use a built-in preset:
+
+```bash
+nudge target --list
+nudge target --preset secret_society_thriller --out configs/my_target.json
+```
+
+Or generate a skeleton for a new behavior, then edit the file:
+
+```bash
+nudge target --goal "make the LLM sound like a zombie" --out configs/my_target.json
+```
+
+The skeleton is flagged `reviewed: false` and lints as untrusted: write real target/contrast descriptions and set
+`"reviewed": true`.
+
+To have an LLM draft the descriptions instead, pass `--auto`. It talks to any OpenAI-compatible chat endpoint —
+a local vLLM server, llama.cpp, or a hosted API — and writes the proposed JSON for you to edit:
+
+```bash
+nudge target --auto --goal "make the LLM sound like a zombie" --out configs/my_target.json
+# vLLM on another host / model:
+nudge target --auto --goal "make the LLM sound like a zombie" --out configs/my_target.json \
+  --base-url http://localhost:8000/v1 --model Qwen/Qwen2.5-7B-Instruct
+```
+
+`--base-url` defaults to `$NUDGE_LLM_BASE_URL` or `http://localhost:8000/v1`; `--model` defaults to
+`$NUDGE_LLM_MODEL` and otherwise the first model the server advertises; `--api-key` reads
+`$NUDGE_LLM_API_KEY` / `$OPENAI_API_KEY`. The output is still `origin: "llm_proposed"`, `reviewed: false` —
+[IMP] the LLM only proposes, you have to check and edit and mark it reviewed before the run will trust it.
+
+### 5. Write a config
+
+Copy-paste a template (`configs/uncertainty_hf.toml`, `configs/thriller_hf.toml`), point `target` at your spec, and set your prompt suite:
+
+```toml
+[experiment]
+name = "zombie-qwen"
+target = "configs/my_target.json"   # preset name or path to spec .json
+run_dir = "runs"
+
+[backend]
+kind = "hf"
+model_id = "Qwen/Qwen2.5-0.5B-Instruct"
+min_layer = 3
+
+[search]
+survey_layers = 5        # layers spread across depth (or list explicit `layers = [...]`)
+neurons_per_layer = 20   # random sample per layer; see the sweep note below
+doses = [0.5, 0.8]       # strength as a fraction of the layer's median MLP-output norm
+
+[prompts]
+suite = "fiction_scenes" # built-in suite or path to a .jsonl with screening/validation/test partitions
+
+[scoring]
+embedder = "sentence-transformers/all-MiniLM-L6-v2"
+```
+
+Every field and its default is in `src/nudge/experiments/config.py`; the `[selection]` and `[criteria]` sections
+control shortlist size, coherence floor and what counts as a confirmed result.
+
+### 6. Estimate cost, then run
+
+```bash
+nudge plan configs/zombie_hf.toml                  # generation count and cached cells; run this first
+nudge run  configs/zombie_hf.toml                  # full pipeline; resumable — re-run to continue
+nudge run  configs/zombie_hf.toml --stage screen   # or just screening (leaderboard only)
+nudge report runs/zombie-qwen                      # write runs/<name>/report.md
+nudge ui --runs runs                               # browse leaderboard, per-prompt outputs, reports
+```
+
+`nudge run` screens candidates against baselines and matched random-direction controls, shortlists the credible
+ones, re-tests them on validation prompts, freezes finalists and success criteria, then evaluates the held-out set
+**once**. Stages can be run separately with `--stage screen|validate|test`; `validate --freeze` writes
+`finalists.json` without testing. Because every cell is cached by model + prompt + intervention + decoding config,
+interrupting and re-running continues where it stopped.
+
+### 7. Sweeping every neuron
+
+`neurons_per_layer` is a random sample, not all neurons. To scan a whole layer, set `layers = [L]` and
+`neurons_per_layer` ≥ that layer's `intermediate_size` (from step 2; sampling caps at the layer size). For a full
+model-wide sweep, list every layer and use one dose and `n_screening = 1–2` first: the candidate count is
+`layers × neurons_per_layer × doses × prompts`, which is hundreds of thousands of generations on a 0.5B model.
+Start with `--stage screen`, read the leaderboard, and only validate/test the top candidates.
+
+### 8. Run the tests
+
+```bash
+pytest        # hooks, orientation, reproducibility, scoring, split integrity, pipeline, UI
+ruff check src tests
+```
 
 ## How it works
 
@@ -58,7 +161,7 @@ The steering intervention adds `dose · R_layer · unit(W_down[:, i])` to the ML
 (`R_layer` = median per-token L2 norm of that layer's MLP output on calibration text), which is equivalent to pushing
 neuron *i*'s activation. Details, caveats and the exact statistics are in [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md).
 
-## Scientific safeguards (enforced in code, not just documented)
+## Scientific safeguards in code:
 
 - **Frozen finalists and one look at the test set.** `test` refuses to run before `finalists.json` exists, refuses a
   second run, and a forced re-run permanently stamps the report *contaminated*.
@@ -70,23 +173,7 @@ neuron *i*'s activation. Details, caveats and the exact statistics are in [`docs
 - **Auditability:** every generation stores model + weights fingerprint, tokenizer, layer/neuron, dose **and unit**, prompt, decoding config, seed, output, status. Scores are versioned by `scorer_id` (spec hash + embedder + formula + evaluators), so nothing changes silently.
 - **Honest language in reports:** exploratory vs confirmed are separate sections; "steering X changed the output under these conditions", never "neuron X is the concept".
 
-## Layout
 
-```
-configs/         demo_tiny.toml, uncertainty_hf.toml, thriller_hf.toml
-data/prompts/    fiction_scenes.jsonl, uncertainty_qa.jsonl   (12 screening / 12 validation / 20 held-out each)
-docs/            METHODOLOGY.md, DESIGN.md, example_report_tiny.md
-src/nudge/
-  targets/       schema.py (TargetSpec), target_builder.py (presets, LLM-proposed specs)
-  models/        base.py (SteeringBackend), hf_backend.py, tiny.py (test fixture), explorer_adapter.py (stub)
-  steering/      interventions.py, hooks.py, validation.py (nudge doctor)
-  experiments/   prompts.py, sampling.py, storage.py, runner.py, confirm.py, config.py
-  scoring/       embeddings.py, semantic.py, behavioral.py, judges.py, controls.py, ranking.py, diversity.py, pipeline.py
-  reports/       markdown_report.py
-  ui/app.py      Streamlit
-  cli.py         `nudge` command
-tests/           hook cleanup, shapes/orientation, reproducibility, scoring, split integrity, pipeline, UI
-```
 
 ## Choosing and extending things
 

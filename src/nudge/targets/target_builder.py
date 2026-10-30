@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Callable
+from collections.abc import Callable
 
 from nudge.targets.schema import TargetSpec
 
@@ -87,6 +87,65 @@ def _slug(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", text.lower()).strip("_")[:48] or "target"
 
 
+def _endpoint(base_url: str, suffix: str) -> str:
+    base = base_url.rstrip("/")
+    return base if base.endswith(suffix) else base + suffix
+
+
+def list_openai_models(base_url: str, api_key: str | None = None, timeout: float = 30.0) -> list[str]:
+    """Model ids exposed by an OpenAI-compatible server (vLLM, llama.cpp, ...)."""
+    import urllib.error
+    import urllib.request
+
+    url = _endpoint(base_url, "/models")
+    headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+    req = urllib.request.Request(url, headers=headers, method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read().decode())
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"model discovery failed ({e.code}) at {url}") from e
+    except urllib.error.URLError as e:
+        raise RuntimeError(f"could not reach LLM at {url}: {e.reason}") from e
+    return [str(m["id"]) for m in data.get("data", []) if m.get("id")]
+
+
+def openai_compatible_call(base_url: str, model: str, api_key: str | None = None,
+                           timeout: float = 120.0, max_tokens: int = 600,
+                           temperature: float = 0.0) -> Callable[[str], str]:
+    """Return a ``str -> str`` callable backed by an OpenAI-compatible chat endpoint.
+
+    Works with a local vLLM server (``--base-url http://localhost:8000/v1``), llama.cpp, or a hosted
+    OpenAI-style API. No extra dependency is needed: it uses ``urllib`` from the standard library.
+    """
+    import urllib.error
+    import urllib.request
+
+    url = _endpoint(base_url, "/chat/completions")
+    headers = {"Content-Type": "application/json"}
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+
+    def call(prompt: str) -> str:
+        body = json.dumps({"model": model, "messages": [{"role": "user", "content": prompt}],
+                           "temperature": temperature, "max_tokens": max_tokens}).encode()
+        req = urllib.request.Request(url, data=body, headers=headers, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                data = json.loads(resp.read().decode())
+        except urllib.error.HTTPError as e:
+            detail = e.read().decode(errors="replace")[:300]
+            raise RuntimeError(f"LLM request failed ({e.code}): {detail}") from e
+        except urllib.error.URLError as e:
+            raise RuntimeError(f"could not reach LLM at {url}: {e.reason}") from e
+        try:
+            return data["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError) as e:
+            raise RuntimeError(f"unexpected LLM response: {str(data)[:300]}") from e
+
+    return call
+
+
 def propose_spec(goal: str, llm: Callable[[str], str] | None = None) -> TargetSpec:
     if llm is None:
         return TargetSpec(
@@ -95,7 +154,7 @@ def propose_spec(goal: str, llm: Callable[[str], str] | None = None) -> TargetSp
             contrast_descriptions=["An ordinary neutral response without that property."],
             reviewed=False, origin="skeleton")
     raw = llm(_PROMPT.format(goal=goal))
-    m = re.search(r"\{.*\}", raw, re.S)
+    m = re.search(r"\{.*\}", raw, re.DOTALL)
     if not m:
         raise ValueError("LLM did not return JSON")
     d = json.loads(m.group(0))

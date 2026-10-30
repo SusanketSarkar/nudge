@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -50,12 +51,41 @@ def cmd_doctor(a) -> int:
 
 
 def cmd_target(a) -> int:
-    from nudge.targets.target_builder import get_preset, list_presets, propose_spec
+    from nudge.targets.target_builder import (
+        get_preset,
+        list_openai_models,
+        list_presets,
+        openai_compatible_call,
+        propose_spec,
+    )
 
     if a.list:
         print("\n".join(list_presets()))
         return 0
-    spec = get_preset(a.preset) if a.preset else propose_spec(a.goal)
+    if a.auto:
+        if not a.goal:
+            print("--auto requires --goal", file=sys.stderr)
+            return 2
+        if a.preset:
+            print("--auto cannot be combined with --preset", file=sys.stderr)
+            return 2
+        model = a.model
+        try:
+            if not model:
+                model = next(iter(list_openai_models(a.base_url, a.api_key)), "")
+                if not model:
+                    print(f"--auto needs --model (or NUDGE_LLM_MODEL); none advertised at {a.base_url}",
+                          file=sys.stderr)
+                    return 2
+            llm = openai_compatible_call(a.base_url, model, a.api_key, a.llm_timeout)
+            spec = propose_spec(a.goal, llm)
+        except (RuntimeError, ValueError, KeyError, TypeError) as e:
+            print(f"auto proposal failed: {e}", file=sys.stderr)
+            return 1
+        print(f"auto: {model} proposed this spec via {a.base_url}; review the descriptions and set "
+              "reviewed=true before using it", file=sys.stderr)
+    else:
+        spec = get_preset(a.preset) if a.preset else propose_spec(a.goal)
     if a.out:
         spec.save(a.out)
         print(f"wrote {a.out}")
@@ -158,6 +188,17 @@ def main(argv: list[str] | None = None) -> int:
     t.add_argument("--preset")
     t.add_argument("--goal")
     t.add_argument("--out")
+    t.add_argument("--auto", action="store_true",
+                   help="have an OpenAI-compatible LLM (e.g. a local vLLM server) propose the spec; "
+                        "the result stays unreviewed for a human to edit")
+    t.add_argument("--base-url", default=os.environ.get("NUDGE_LLM_BASE_URL", "http://localhost:8000/v1"),
+                   help="OpenAI-compatible base URL for --auto (default: $NUDGE_LLM_BASE_URL or "
+                        "http://localhost:8000/v1)")
+    t.add_argument("--model", default=os.environ.get("NUDGE_LLM_MODEL", ""),
+                   help="model id for --auto (default: $NUDGE_LLM_MODEL, else first model the server advertises)")
+    t.add_argument("--api-key", default=os.environ.get("NUDGE_LLM_API_KEY") or os.environ.get("OPENAI_API_KEY"),
+                   help="API key for --auto (default: $NUDGE_LLM_API_KEY or $OPENAI_API_KEY)")
+    t.add_argument("--llm-timeout", type=float, default=120.0, help="request timeout in seconds for --auto")
     t.set_defaults(fn=cmd_target)
 
     for name, fn, h in (("plan", cmd_plan, "estimate generation counts"), ("run", cmd_run, "run an experiment")):
